@@ -239,8 +239,11 @@ class GridLimeReader : public BinaryIO {
 	//	std::cout << "R Payload expected " <<PayloadSize<<std::endl;
 	//	std::cout << "R file size " <<file_bytes <<std::endl;
 
-	assert(PayloadSize == file_bytes);// Must match or user error
-
+    // file_bytes = '0' for shuffled read
+    if(filename.find("shuffle")==std::string::npos){
+      assert(PayloadSize == file_bytes);// Must match or user error
+    }
+          
 	uint64_t offset= ftello(File);
 	//	std::cout << " ReadLatticeObject from offset "<<offset << std::endl;
 	BinarySimpleMunger<sobj,sobj> munge;
@@ -443,13 +446,14 @@ class GridLimeWriter : public BinaryIO
     uint32_t nersc_csum,scidac_csuma,scidac_csumb;
     uint64_t PayloadSize = sizeof(sobj) * grid->_gsites;
     if ( boss_node ) {
-      createLimeRecordHeader(record_name, 0, 0, PayloadSize);
-      fflush(File);
+        if(filename.find("shuffle")==std::string::npos){
+              createLimeRecordHeader(record_name, 0, 0, PayloadSize);
+              fflush(File);
+        }else{//Luchang's shuffled field writer
+              createLimeRecordHeader(record_name, 0, 0, 0);
+              fflush(File);
+        }
     }
-    
-    //    std::cout << "W sizeof(sobj)"      <<sizeof(sobj)<<std::endl;
-    //    std::cout << "W Gsites "           <<field.Grid()->_gsites<<std::endl;
-    //    std::cout << "W Payload expected " <<PayloadSize<<std::endl;
 
     ////////////////////////////////////////////////
     // Check all nodes agree on file position
@@ -472,8 +476,11 @@ class GridLimeWriter : public BinaryIO
     ///////////////////////////////////////////
     if ( boss_node ) {
       fseek(File,0,SEEK_END);             
-      uint64_t offset2 = ftello(File);     //    std::cout << " now at offset "<<offset2 << std::endl;
-      assert( (offset2-offset1) == PayloadSize);
+      uint64_t offset2 = ftello(File);
+      //std::cout << " filename "<< filename << std::endl;
+      if(filename.find("shuffle")==std::string::npos){
+        assert( (offset2-offset1) == PayloadSize);
+      }
     }
 
     /////////////////////////////////////////////////////////////
