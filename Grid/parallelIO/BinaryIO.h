@@ -408,7 +408,10 @@ class BinaryIO {
               if (sizeof(fobj) == 3*sizeof(Complex)) {
                   qlat::Field<Complex> f;
                   f.init(geo, 3);// 3 colors
-                  qlat::read_field(f,filename,tag);
+                  const long total_bytes = qlat::read_field(f,filename,tag);
+                  if (total_bytes == 0) {
+                      qlat::read_field(f, filename, file);
+                  }
                   qlat::Vector<Complex> vec((Complex*)iodata.data(),
                                             3*iodata.size());
                   assert(vec.data_size() == qlat::get_data(f).data_size());
@@ -416,7 +419,10 @@ class BinaryIO {
               } else if (sizeof(fobj) == 3*sizeof(ComplexF)) {
                   qlat::Field<ComplexF> f;
                   f.init(geo, 3);// 3 colors
-                  qlat::read_field(f,filename,tag);
+                  const long total_bytes = qlat::read_field(f,filename,tag);
+                  if (total_bytes == 0) {
+                      qlat::read_field(f, filename, file);
+                  }
                   qlat::Vector<ComplexF> vec((ComplexF*)iodata.data(),
                                             3*iodata.size());
                   assert(vec.data_size() == qlat::get_data(f).data_size());
@@ -545,7 +551,6 @@ class BinaryIO {
                   assert(vec.data_size() == qlat::get_data(f).data_size());
                   qlat::assign(qlat::get_data(f), vec);
                   qlat::write_field(f, filename, tag);
-                  std::cout<< GridLogMessage<<"qlat wrote" << std::endl;
               } else if (sizeof(fobj) == 3*sizeof(ComplexF)) {
                   qlat::Field<ComplexF> f;
                   f.init(geo, 3);// 3 colors
